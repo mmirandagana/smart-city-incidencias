@@ -61,6 +61,25 @@ export class IncidenciaController {
   };
 
   /**
+   * POST /api/v1/incidencias/seed
+   */
+  public seedDemo = async (_req: Request, res: Response): Promise<void> => {
+    try {
+      await this.service.resetSeed();
+      res.status(200).json({
+        success: true,
+        message: 'Base de datos restablecida exitosamente con datos de prueba'
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        error: 'Error al restablecer datos de prueba',
+        details: error.message
+      });
+    }
+  };
+
+  /**
    * GET /api/v1/incidencias/:id
    */
   public getById = async (req: Request, res: Response): Promise<void> => {

@@ -1,5 +1,6 @@
 import { IncidenciaRepository } from '../repositories/incidencia.repository';
 import { Incidencia, CreateIncidenciaDTO, UpdateIncidenciaDTO, IncidenciaFilter, CategoriaIncidencia, EstadoIncidencia, PrioridadIncidencia } from '../models/incidencia.model';
+import { seedDatabase } from '../config/seed';
 
 const CATEGORIAS_VALIDAS: CategoriaIncidencia[] = ['Bache', 'Luminaria', 'Semáforo', 'Basura/Aseo'];
 const ESTADOS_VALIDOS: EstadoIncidencia[] = ['Ingresado', 'Asignado', 'En Reparación', 'Resuelto'];
@@ -123,5 +124,9 @@ export class IncidenciaService {
 
   public async getStats(): Promise<Record<string, number>> {
     return await this.repository.getStats();
+  }
+
+  public async resetSeed(): Promise<void> {
+    await seedDatabase(true);
   }
 }

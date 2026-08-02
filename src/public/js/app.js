@@ -27,7 +27,7 @@ async function loadData() {
     currentIncidencias = await API.fetchIncidencias(filters);
     const stats = await API.fetchStats();
 
-    // Actualizar UI
+    // Actualizar UI en vivo sin recargar la página
     UI.renderStats(stats);
     UI.renderIncidenciasList(currentIncidencias, {
       onCenterMap: (lat, lng) => {
@@ -81,6 +81,23 @@ function setupEventListeners() {
     await handleCreateIncidencia();
   });
 
+  // Reset Demo Button (Restablecer siembra de prueba)
+  const btnSeed = document.getElementById('btn-seed-data');
+  if (btnSeed) {
+    btnSeed.classList.remove('hidden');
+    btnSeed.addEventListener('click', async () => {
+      if (confirm('¿Desea restablecer la base de datos con las incidencias de prueba iniciales?')) {
+        try {
+          await API.seedDemo();
+          UI.showToast('Base de datos restablecida con éxito', 'success');
+          await loadData(); // Refresco reactivo sin location.reload()
+        } catch (error) {
+          UI.showToast(error.message || 'Error al restablecer demo', 'error');
+        }
+      }
+    });
+  }
+
   // GPS Current Location Button
   document.getElementById('btn-detect-gps').addEventListener('click', () => {
     if (navigator.geolocation) {
@@ -122,7 +139,6 @@ function setupEventListeners() {
   });
 
   // View Mode Selectors
-  const grid = document.getElementById('content-grid');
   const mapPanel = document.getElementById('map-panel');
   const listPanel = document.getElementById('list-panel');
 
@@ -175,7 +191,7 @@ async function handleCreateIncidencia() {
     const nueva = await API.createIncidencia(dto);
     UI.hideModal();
     UI.showToast(`Incidencia "#${nueva.id} - ${nueva.titulo}" registrada exitosamente!`, 'success');
-    await loadData();
+    await loadData(); // Actualización reactiva sin recargar página
     MapModule.centerMapOn(nueva.latitud, nueva.longitud);
   } catch (error) {
     console.error('Error al ingresar incidencia:', error);
@@ -189,7 +205,7 @@ async function handleAdvanceState(id, nextState) {
   try {
     await API.updateIncidencia(id, { estado: nextState });
     UI.showToast(`Incidencia #${id} actualizada a: ${nextState}`, 'success');
-    await loadData();
+    await loadData(); // Actualización reactiva sin recargar página
   } catch (error) {
     console.error('Error al actualizar estado:', error);
     UI.showToast(error.message || 'Error al actualizar el estado', 'error');
@@ -204,7 +220,7 @@ async function handleDeleteIncidencia(id) {
   try {
     await API.deleteIncidencia(id);
     UI.showToast(`Incidencia #${id} eliminada del sistema.`, 'success');
-    await loadData();
+    await loadData(); // Actualización reactiva sin recargar página
   } catch (error) {
     console.error('Error al eliminar incidencia:', error);
     UI.showToast(error.message || 'Error al eliminar', 'error');
