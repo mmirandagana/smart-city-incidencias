@@ -1,0 +1,62 @@
+### Smart City - Incidencias Urbanas REST API Test File
+
+@baseUrl = http://localhost:3000/api/v1
+
+### 1. Health Check del Servidor
+GET {{baseUrl}}/health
+
+### 2. Obtener todas las incidencias (Sin Filtros)
+GET {{baseUrl}}/incidencias
+
+### 3. Obtener estadísticas agregadas
+GET {{baseUrl}}/incidencias/stats
+
+### 4. Filtrar incidencias por Estado (ej: Ingresado)
+GET {{baseUrl}}/incidencias?estado=Ingresado
+
+### 5. Filtrar incidencias por Categoría (ej: Bache)
+GET {{baseUrl}}/incidencias?categoria=Bache
+
+### 6. Búsqueda por texto (ej: España)
+GET {{baseUrl}}/incidencias?search=España
+
+### 7. Obtener una incidencia específica por ID
+GET {{baseUrl}}/incidencias/1
+
+### 8. Crear una nueva incidencia urbana (POST)
+POST {{baseUrl}}/incidencias
+Content-Type: application/json
+
+{
+  "titulo": "Bache en calle Agustinas",
+  "categoria": "Bache",
+  "descripcion": "Grieta profunda en pavimento cerca del paso peatonal de Agustinas con Ahumada.",
+  "latitud": -33.4415,
+  "longitud": -70.6508,
+  "prioridad": "Alta",
+  "foto_url": "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=600&q=80"
+}
+
+### 9. Actualizar estado y prioridad de incidencia (PATCH)
+PATCH {{baseUrl}}/incidencias/1
+Content-Type: application/json
+
+{
+  "estado": "En Reparación",
+  "prioridad": "Crítica"
+}
+
+### 10. Intentar crear con datos inválidos (Validación Error 400)
+POST {{baseUrl}}/incidencias
+Content-Type: application/json
+
+{
+  "titulo": "Ab",
+  "categoria": "CategoriaInvalida",
+  "descripcion": "Corta",
+  "latitud": 200,
+  "longitud": -70.6508
+}
+
+### 11. Eliminar una incidencia por ID (DELETE)
+DELETE {{baseUrl}}/incidencias/6
