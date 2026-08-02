@@ -63,13 +63,30 @@ const initialIncidencias = [
   }
 ];
 
-export async function seedDatabase() {
-  console.log('🌱 Iniciando siembra (seeding) de la base de datos de Smart City...');
+/**
+ * Función para sembrar la base de datos de incidencias.
+ * @param force Si es true, reinicia y fuerza la re-inserción. Si es false, solo siembra si la tabla está vacía.
+ */
+export async function seedDatabase(force: boolean = false) {
   const db = Database.getInstance();
   await db.ready();
 
+  if (!force) {
+    try {
+      const row = await db.get<{ count: number }>('SELECT COUNT(*) as count FROM incidencias;');
+      if (row && row.count > 0) {
+        console.log(`ℹ️ La base de datos SQLite contiene ${row.count} incidencias. No se requiere siembra automática.`);
+        return;
+      }
+    } catch (_e) {
+      // Continuar si hay cualquier inconsistencia
+    }
+  }
+
+  console.log('🌱 Ejecutando siembra (seeding) de la base de datos de Smart City...');
+
   try {
-    // Limpiar tabla existente para asegurar estado limpio
+    // Limpiar tabla existente si es forzado o siembra inicial
     await db.run('DELETE FROM incidencias;');
     
     // Resetear secuencia de autoincremento en sqlite
@@ -105,7 +122,7 @@ export async function seedDatabase() {
 
 // Permitir ejecución directa del script via cli: npx tsx src/config/seed.ts
 if (require.main === module) {
-  seedDatabase().then(() => {
+  seedDatabase(true).then(() => {
     process.exit(0);
   });
 }

@@ -105,16 +105,9 @@ async function runTests() {
     console.log('\n========================================================');
     console.log(`🎉 RESUMEN DE PRUEBAS: ${successCount}/${testCount} exitosas.`);
     console.log('========================================================\n');
-
-    if (successCount === testCount) {
-      process.exit(0);
-    } else {
-      process.exit(1);
-    }
-
   } catch (error) {
     console.error('❌ Error catastrófico durante la ejecución de pruebas:', error);
-    process.exit(1);
+    process.exitCode = 1;
   }
 }
 

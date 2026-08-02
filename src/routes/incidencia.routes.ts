@@ -4,8 +4,9 @@ import { IncidenciaController } from '../controllers/incidencia.controller';
 const router = Router();
 const controller = new IncidenciaController();
 
-// Ruta de Estadísticas (debe ir antes de /:id para evitar conflicto)
+// Rutas Especiales (deben ir antes de /:id para evitar conflicto)
 router.get('/stats', controller.getStats);
+router.post('/seed', controller.seedDemo);
 
 // RUTAS CRUD PRINCIPALES
 router.get('/', controller.getAll);

@@ -93,3 +93,17 @@ export async function deleteIncidencia(id) {
 
   return true;
 }
+
+export async function seedDemo() {
+  const response = await fetch(`${BASE_URL}/seed`, {
+    method: 'POST'
+  });
+
+  const json = await response.json();
+
+  if (!response.ok || !json.success) {
+    throw new Error(json.error || 'Error al restablecer la base de datos de prueba');
+  }
+
+  return true;
+}
