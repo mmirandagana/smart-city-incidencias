@@ -324,4 +324,4 @@ Salida esperada:
 
 ## 💻 Desarrollo
 
-Desarrollado para el **Taller de Desarrollo Web y Móvil (Semana 06)**.
+Desarrollado para el **Taller de Desarrollo Web y Móvil (Semana 06) - Manuel Miranda**.
