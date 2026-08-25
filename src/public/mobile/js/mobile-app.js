@@ -47,6 +47,17 @@ class MobileApp {
     window.mobileRouter.init();
     window.mobileRouter.on('screenChange', (data) => this.handleScreenChange(data));
 
+    // Escuchar evento de pantalla activada para redibujado inmediato del mapa
+    window.addEventListener('screen-activated', (e) => {
+      const screenId = e.detail?.screenId || e.detail;
+      if (screenId === 'screen-map') {
+        this.initOrResizeMap();
+      }
+    });
+
+    // Configurar ResizeObserver para el contenedor del mapa
+    this.setupMapResizeObserver();
+
     // Registrar Service Worker PWA
     this.registerServiceWorker();
 
@@ -390,7 +401,7 @@ class MobileApp {
   // ==========================================
   async handleScreenChange({ screenId, params }) {
     if (screenId === 'screen-map') {
-      setTimeout(() => this.initOrResizeMap(), 150);
+      this.initOrResizeMap();
     } else if (screenId === 'screen-detail' && params.id) {
       const item = await this.getIncidenciaById(params.id);
       if (item) {
@@ -525,16 +536,37 @@ class MobileApp {
   }
 
   // ==========================================
-  // MAPA LEAFLET MÓVIL
+  // MAPA LEAFLET MÓVIL & RESIZEOBSERVER
   // ==========================================
+  setupMapResizeObserver() {
+    const mapElement = document.querySelector('#mobile-leaflet-map, #mobile-map');
+    if (!mapElement || typeof ResizeObserver === 'undefined') return;
+
+    if (this.mapResizeObserver) {
+      this.mapResizeObserver.disconnect();
+    }
+
+    this.mapResizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.contentRect.width > 0 && entry.contentRect.height > 0) {
+          if (this.map) {
+            this.map.invalidateSize();
+          }
+        }
+      }
+    });
+
+    this.mapResizeObserver.observe(mapElement);
+  }
+
   initOrResizeMap() {
-    const mapElement = document.getElementById('mobile-leaflet-map');
+    const mapElement = document.querySelector('#mobile-leaflet-map, #mobile-map');
     if (!mapElement) return;
 
     if (!this.map) {
       // Coordenadas iniciales (Centro de Santiago de Chile)
       const center = [-33.4372, -70.6506];
-      this.map = L.map('mobile-leaflet-map', {
+      this.map = L.map(mapElement, {
         zoomControl: false,
         attributionControl: false
       }).setView(center, 13);
@@ -566,8 +598,12 @@ class MobileApp {
           }
         });
       }
+
+      // Conectar ResizeObserver al contenedor del mapa
+      this.setupMapResizeObserver();
     }
 
+    // Inmediatamente redibujar dimensiones del mapa
     this.map.invalidateSize();
     this.updateMapMarkers();
   }
