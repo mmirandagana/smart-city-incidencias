@@ -134,8 +134,16 @@ class MobileRouter {
       }
     }
 
+    // Emitir evento personalizado screen-activated con el screenId
+    const activatedEvent = new CustomEvent('screen-activated', {
+      detail: { screenId, params }
+    });
+    window.dispatchEvent(activatedEvent);
+    document.dispatchEvent(activatedEvent);
+
     if (notify) {
       this.trigger('screenChange', { screenId, params });
+      this.trigger('screen-activated', { screenId, params });
     }
   }
 
