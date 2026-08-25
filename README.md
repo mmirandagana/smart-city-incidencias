@@ -1,95 +1,196 @@
-# 🏙️ Smart City - Ecosistema Municipal de Gestión de Incidencias Urbanas
+# 🏙️ Smart City - Ecosistema de Gestión de Incidencias Urbanas (Web & Móvil)
 
-Plataforma Web CRUD y API RESTful de grado profesional para la gestión operativa de incidencias urbanas municipales (baches, fallas de alumbrado público, semáforos descalibrados y acumulación de basura). 
+Plataforma integral de reporte y gestión de incidencias urbanas municipales (baches, luminarias públicas, semáforos y microbasurales) diseñada bajo una **arquitectura dual desacoplada**:
 
-El sistema cuenta con persistencia local en **SQLite3**, implementación de **TypeScript** con arquitectura limpia en capas, patrón **Singleton** para la base de datos y un **Dashboard Web Interactivo con Leaflet.js** para visualización georreferenciada en tiempo real.
+1. **Panel Web Municipal (`/`)**: Dashboard administrativo para visualización en tiempo real, KPIs operativos y mapa georreferenciado con Leaflet.js.
+2. **Cliente Móvil Ciudadano & Cuadrilla (`/mobile/`)**: Aplicación Mobile-First SPA / PWA interactiva con navegación táctil, geolocalización satelital HTML5, modo offline con Service Worker, switch de Modo Cuadrilla para actualización en terreno (`PATCH`), y configuración de empaquetado para distribución directa (.PWA y APK Capacitor sin tiendas).
+3. **Backend RESTful con Node.js, Express & TypeScript**: Arquitectura limpia en 3 capas con persistencia local en SQLite3 bajo el patrón Singleton.
 
 ---
 
-## 🏛️ Arquitectura del Sistema
-
-El proyecto está diseñado bajo principios de software limpio, modular y escalable.
+## 🏛️ Arquitectura del Sistema Dual
 
 ```
 smart-city-incidencias/
-├── database.sqlite            # Base de datos local SQLite3 (generada automáticamente)
-├── package.json               # Configuración de dependencias y scripts npm
-├── tsconfig.json              # Configuración del compilador TypeScript
-├── .env                       # Variables de entorno (Puerto, ruta DB)
-├── README.md                  # Documentación integral del ecosistema
+├── capacitor.config.json               # Configuración para empaquetado APK directo (Capacitor)
+├── database.sqlite                     # Base de datos local SQLite3
+├── package.json                        # Scripts de compilación y pruebas automatizadas
+├── tsconfig.json                       # Configuración de compilador TypeScript
+├── .env                                # Variables de entorno (PORT, DB_PATH)
+├── README.md                           # Documentación técnica del ecosistema
 ├── src/
-│   ├── app.ts                 # Configuración de Express, middlewares y estáticos
-│   ├── server.ts              # Punto de entrada y listener del servidor HTTP
+│   ├── app.ts                          # Express, middlewares, estáticos y fallback SPA dual
+│   ├── server.ts                       # Entrypoint y listener HTTP
 │   ├── config/
-│   │   ├── database.ts        # Singleton de conexión SQLite3
-│   │   └── seed.ts            # Script de inicialización / poblado de prueba
+│   │   ├── database.ts                 # Patrón Singleton de conexión SQLite3
+│   │   └── seed.ts                     # Poblado inicial de prueba
 │   ├── models/
-│   │   └── incidencia.model.ts# Interfaces e Invariantes de Dominio (TypeScript)
+│   │   └── incidencia.model.ts         # Tipos e invariantes de dominio
 │   ├── repositories/
-│   │   └── incidencia.repository.ts # Capa de Acceso a Datos (DAO / SQL Directo)
+│   │   └── incidencia.repository.ts    # Capa de Acceso a Datos (DAO / SQL promisificado)
 │   ├── services/
-│   │   └── incidencia.service.ts    # Capa de Lógica de Negocio y Validaciones
+│   │   └── incidencia.service.ts       # Capa de Lógica de Negocio y Reglas
 │   ├── controllers/
-│   │   └── incidencia.controller.ts # Capa Controlador HTTP (REST Controllers)
+│   │   └── incidencia.controller.ts    # Controladores REST HTTP
 │   ├── routes/
-│   │   └── incidencia.routes.ts     # Enrutador Express (/api/v1/incidencias)
-│   └── public/                # Frontend Web Municipal (Static Assets)
-│       ├── index.html         # Dashboard HTML5 accesible con Tailwind CSS
-│       ├── css/
-│       │   └── styles.css     # Estilos personalizados y animaciones
-│       └── js/
-│           ├── api.js         # Cliente HTTP Fetch para la REST API
-│           ├── map.js         # Módulo de Mapa Interactivo Leaflet.js
-│           ├── ui.js          # Manipulación DOM, contadores KPI y Modales
-│           └── app.js         # Coordinador principal ES6 Modules
+│   │   └── incidencia.routes.ts        # Enrutador /api/v1/incidencias
+│   └── public/                         # Capa de Presentación Dual
+│       ├── index.html                  # Dashboard Web Municipal (Desktop / Panel Central)
+│       ├── css/styles.css              # Estilos del Dashboard Web
+│       ├── js/                         # Lógica del Dashboard Web (Leaflet, KPIs, Modales)
+│       └── mobile/                     # 📱 APLICATIVO MÓVIL (SPA / PWA Mobile-First)
+│           ├── index.html              # Shell HTML5 (Viewport móvil, 5 Mockups interactivos)
+│           ├── manifest.json           # Web App Manifest PWA (CityAlert, standalone)
+│           ├── sw.js                   # Service Worker (Caché offline y App Shell)
+│           ├── icons/                  # Iconografía PWA (SVG, PNG 192x192, 512x512)
+│           ├── css/mobile.css          # Estilos táctiles (Touch targets >=48px, notch safe-areas)
+│           └── js/
+│               ├── mobile-router.js    # Enrutador SPA ligero y gestor de historial de pantallas
+│               ├── mobile-gps.js       # Sensor GPS HTML5 con tolerancia a fallos y fallback
+│               └── mobile-app.js       # Orquestador cliente, mapa vertical y API REST
 └── tests/
-    ├── test-api.http          # Suite para REST Client (VS Code)
-    └── verify-crud.js         # Suite de Pruebas Automatizadas de Integración
+    ├── test-api.http                   # Suite REST Client (VS Code)
+    ├── verify-crud.js                  # Suite de pruebas automatizadas Backend CRUD
+    └── verify-mobile.js                # Suite de pruebas automatizadas Cliente Móvil & PWA
 ```
-
-### 1. Patrón Singleton (`Database`)
-Ubicado en `src/config/database.ts`, la clase `Database` encapsula la instancia de conexión a la base de datos SQLite3.
-- **Propósito**: Asegurar que durante todo el ciclo de vida del servidor Express exista **una y solo una** conexión a la base de datos local, evitando bloqueos de archivo (file locking) o conexiones duplicadas.
-- **Implementación**:
-  ```typescript
-  const dbInstance = Database.getInstance();
-  ```
-
-### 2. Arquitectura en Capas (Layered Architecture)
-El flujo de datos sigue una separación de responsabilidades estricta de 3 capas:
-1. **Controller (`incidencia.controller.ts`)**: Recibe las peticiones HTTP (`req`, `res`), desestructura parámetros y retorna respuestas formateadas en JSON con los códigos de estado HTTP adecuados (`200 OK`, `201 Created`, `400 Bad Request`, `404 Not Found`).
-2. **Service (`incidencia.service.ts`)**: Implementa la lógica de negocio y validaciones estrictas (rango de coordenadas GPS, enumeraciones de categoría, estados y prioridades permitidas).
-3. **Repository / DAO (`incidencia.repository.ts`)**: Realiza la ejecución de consultas SQL mediante métodos promisificados sobre la instancia Singleton de la base de datos.
 
 ---
 
-## 📋 Requisitos Previos
+## 📱 Módulo Móvil: Vistas, Mockups y Flujos de Interacción
 
-- **Node.js**: v18.0.0 o superior (Recomendado v20+ / v26+).
-- **npm**: v9.0.0 o superior.
+La aplicación móvil en `src/public/mobile/` implementa una experiencia nativa táctil mediante una **Single Page Application (SPA)** de alto rendimiento sin frameworks pesados:
+
+```
+                  ┌───────────────────────────────┐
+                  │      BARRA DE NAVEGACIÓN      │
+                  │   [Inicio] [Mapa] [+] [Perfil]│
+                  └───────────────┬───────────────┘
+                                  │
+      ┌──────────────────┬────────┴─────────┬──────────────────┐
+      ▼                  ▼                  ▼                  ▼
+┌──────────────┐   ┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+│ screen-home  │   │  screen-map  │   │screen-report │   │screen-profile│
+│ Feed Tarjetas│   │Leaflet Mobile│   │Form + GPS    │   │PWA / APK Dist│
+│ Filtros Cat. │   │Bottom Sheet  │   │Cámara Evid.  │   │Cuadrilla Mode│
+└──────┬───────┘   └──────┬───────┘   └──────────────┘   └──────────────┘
+       │                  │
+       └─────────┬────────┘
+                 ▼
+          ┌──────────────┐
+          │screen-detail │
+          │Info Detallada│
+          │Modo Cuadrilla│
+          │PATCH Estados │
+          └──────────────┘
+```
+
+### Mapeo de Pantallas (Mockups Interactivos):
+
+1. **`screen-home` (Feed Ciudadano & Acciones Rápidas)**:
+   - Visualización de incidencias recientes en formato tarjeta táctil (touch target > 48px).
+   - Filtros dinámicos por categoría (Baches, Alumbrado, Semáforos, Basura/Aseo).
+   - Indicador de estado de red (Online / Offline PWA).
+   - Botón Flotante de Acción (FAB `+`) para reporte inmediato.
+
+2. **`screen-report` (Formulario de Reporte con GPS & Evidencia Fotográfica)**:
+   - Selector visual de categorías con retroalimentación háptica/visual.
+   - Sensor GPS en tiempo real con indicador de precisión satelital y fallback inteligente.
+   - Campos de título, descripción y nivel de urgencia/prioridad.
+   - Simulación de captura con cámara y previsualización de imagen.
+   - Envío asíncrono hacia `POST /api/v1/incidencias`.
+
+3. **`screen-map` (Mapa Leaflet Interactivo Vertical)**:
+   - Cartografía optimizada para orientación vertical y gestos táctiles (pinch-to-zoom).
+   - Marcadores georreferenciados dinámicos con iconos por categoría.
+   - Botón "Mi Ubicación" para centrado GPS instantáneo.
+   - *Bottom Sheet* deslizante con resumen del incidente y acceso directo al detalle.
+
+4. **`screen-detail` (Detalle de Incidencia & Modo Cuadrilla)**:
+   - Vista de pantalla completa con fotografía de evidencia, ubicación exacta y fecha.
+   - **Modo Cuadrilla Municipal**: activa el panel de operaciones en terreno permitiendo cambiar el estado del reporte (`Ingresado` ➔ `Asignado` ➔ `En Reparación` ➔ `Resuelto`) enviando una petición `PATCH` a la API en tiempo real.
+
+5. **`screen-profile` (Perfil de Usuario & Distribución Directa)**:
+   - Identificación de rol (Vecino Ciudadano vs. Operador de Cuadrilla en Terreno).
+   - Conmutador de rol operativo.
+   - Métricas de incidentes totales y resueltos.
+   - Sección de **Distribución Directa** para instalación PWA o generación de APK Capacitor.
+
+---
+
+## 📦 Distribución Directa (Sin Dependencia de Tiendas de Aplicaciones)
+
+El aplicativo móvil está preparado para distribuirse a usuarios y funcionarios sin pasar por Google Play Store ni Apple App Store:
+
+### Opción 1: Instalación Directa como PWA (Progressive Web App)
+Gracias a `manifest.json` y `sw.js`:
+- **Android (Chrome / Edge / Firefox)**:
+  1. Ingresa a `http://<IP-SERVIDOR>:3000/mobile/`.
+  2. Pulsa en el botón **"Instalar"** del banner superior o en el menú del navegador selecciona **"Instalar aplicación"** / **"Agregar a la pantalla principal"**.
+  3. La app se abrirá en modo `standalone` sin barras de navegador y con icono propio `CityAlert`.
+- **iOS (Safari)**:
+  1. Abre `http://<IP-SERVIDOR>:3000/mobile/` en Safari.
+  2. Pulsa el botón **Compartir** (icono de flecha hacia arriba).
+  3. Selecciona **"Agregar al inicio"** (Add to Home Screen).
+
+### Opción 2: Empaquetado a APK Directo con Capacitor
+El proyecto incluye el archivo de configuración `capacitor.config.json` en la raíz:
+
+```json
+{
+  "appId": "cl.unab.smartcity.incidencias",
+  "appName": "Smart City Mobile",
+  "webDir": "src/public/mobile",
+  "bundledWebRuntime": false
+}
+```
+
+Para generar un archivo `.apk` instalable directamente (Sideloading):
+
+```bash
+# 1. Instalar dependencias de Capacitor (si no están instaladas globalmente)
+npm install @capacitor/core @capacitor/cli @capacitor/android
+
+# 2. Agregar la plataforma Android
+npx cap add android
+
+# 3. Sincronizar los archivos estáticos de src/public/mobile
+npx cap sync
+
+# 4. Compilar el APK debug directamente con Gradle
+cd android
+./gradlew assembleDebug
+
+# El archivo APK generado estará disponible en:
+# android/app/build/outputs/apk/debug/app-debug.apk
+```
 
 ---
 
 ## 🚀 Instalación y Puesta en Marcha
 
-### 1. Clonar e Instalar Dependencias
+### 1. Requisitos Previos
+- **Node.js**: v18.0.0 o superior (v20+ / v26+ recomendado).
+- **npm**: v9.0.0 o superior.
+
+### 2. Instalación de Dependencias
 ```bash
 npm install
 ```
 
-### 2. Poblar Base de Datos de Prueba (Seeding)
-Para inicializar la base de datos con al menos 6 incidencias georreferenciadas de prueba:
+### 3. Poblado Inicial de la Base de Datos (Opcional)
 ```bash
 npm run seed
 ```
 
-### 3. Ejecutar en Modo Desarrollo (Live Reloading)
+### 4. Ejecución en Modo Desarrollo
 ```bash
 npm run dev
 ```
-El servidor se iniciará en `http://localhost:3000`.
+- **Dashboard Web Municipal**: `http://localhost:3000/`
+- **Aplicación Móvil PWA**: `http://localhost:3000/mobile/`
+- **Health Check API**: `http://localhost:3000/api/v1/health`
 
-### 4. Compilar y Ejecutar en Producción
+### 5. Compilación a Producción
 ```bash
 npm run build
 npm start
@@ -97,76 +198,88 @@ npm start
 
 ---
 
-## 🧪 Pruebas Automatizadas (Verify CRUD)
+## 🧪 Pruebas Automatizadas
 
-Con el servidor en ejecución (`npm run dev`), abre una segunda terminal y ejecuta la suite automatizada de integración que valida todos los endpoints:
+Con el servidor en ejecución, puedes correr las suites de pruebas integrales:
 
+### 1. Suite de Pruebas del Cliente Móvil & PWA
+Valida la entrega de `/mobile/`, el manifiesto PWA, el Service Worker, y el ciclo de vida móvil (POST con GPS ➔ GET detalle ➔ PATCH Cuadrilla ➔ DELETE):
 ```bash
-npm test
+npm run test:mobile
 ```
 
 Salida esperada:
 ```
-🧪 ========================================================
-🧪  SUITE DE PRUEBAS DE INTEGRACIÓN REST API (SMART CITY)
-🧪 ========================================================
+📱 ========================================================
+📱  SUITE DE PRUEBAS DEL CLIENTE MÓVIL & PWA (SMART CITY)
+📱 ========================================================
 
-📡 1. Verificando Health Check...
-✅ [PASS 1] Servidor respondió 200 OK en /health
+📡 1. Verificando disponibilidad del backend (/api/v1/health)...
+✅ [PASS 1] Servidor backend en línea (HTTP 200)
 
-📋 2. Obteniendo todas las incidencias (GET /incidencias)...
-✅ [PASS 2] Respuesta 200 OK con arreglo de incidencias
-✅ [PASS 3] Poblado inicial correcto (6 incidencias encontradas)
+📱 2. Verificando entrega del HTML Shell Móvil (/mobile/)...
+✅ [PASS 2] Ruta /mobile/ responde HTTP 200 OK
+✅ [PASS 3] HTML contiene el contenedor principal #app-container
+✅ [PASS 4] HTML contiene las vistas Mockup requeridas
 
-➕ 3. Creando nueva incidencia urbana (POST /incidencias)...
-✅ [PASS 4] Respuesta 201 Created
-✅ [PASS 5] El título retornado coincide con el enviado
+📄 3. Verificando Web App Manifest PWA (/mobile/manifest.json)...
+✅ [PASS 5] Ruta /mobile/manifest.json responde HTTP 200 OK
+✅ [PASS 6] Manifest contiene short_name "CityAlert"
+✅ [PASS 7] Manifest define display "standalone"
+✅ [PASS 8] Manifest define start_url "/mobile/"
 
-🔍 4. Consultando la incidencia creada ID 7 (GET /incidencias/:id)...
-✅ [PASS 6] Incidencia recuperada correctamente por ID
+⚙️ 4. Verificando Service Worker (/mobile/sw.js)...
+✅ [PASS 9] Service Worker accesible en HTTP 200
+✅ [PASS 10] Service Worker define manejadores de install y fetch
 
-🔄 5. Actualizando estado a "En Reparación" (PATCH /incidencias/:id)...
-✅ [PASS 7] Estado actualizado a "En Reparación"
-✅ [PASS 8] Prioridad actualizada a "Crítica"
+🛰️ 5. Simulando reporte móvil ciudadano con geolocalización GPS (POST /incidencias)...
+✅ [PASS 11] Incidencia móvil creada con HTTP 201 Created
+✅ [PASS 12] Categoría guardada correctamente
 
-📊 6. Consultando estadísticas del sistema (GET /incidencias/stats)...
-✅ [PASS 9] Estadísticas obtenidas correctamente
+🔍 6. Consultando detalle de incidencia ID #10...
+✅ [PASS 13] Incidencia recuperada con éxito para pantalla screen-detail
 
-⚠️ 7. Probando validación de campos erróneos (POST /incidencias datos inválidos)...
-✅ [PASS 10] El servidor rechazó datos inválidos con código 400 Bad Request
+🛠️ 7. Simulando actualización de estado en Modo Cuadrilla Municipal (PATCH)...
+✅ [PASS 14] Estado actualizado a "En Reparación" vía PATCH
 
-🗑️ 8. Eliminando la incidencia ID 7 (DELETE /incidencias/:id)...
-✅ [PASS 11] Respuesta 200 OK al eliminar
+📋 8. Consultando feed móvil actualizado...
+✅ [PASS 15] Feed móvil contiene la incidencia reportada
 
-🔎 9. Verificando que la incidencia ID 7 ya no existe...
-✅ [PASS 12] La incidencia eliminada retorna 404 Not Found
+🗑️ 9. Limpiando datos de prueba (DELETE ID #10)...
+✅ [PASS 16] Incidencia de prueba eliminada correctamente
 
 ========================================================
-🎉 RESUMEN DE PRUEBAS: 12/12 exitosas.
+🎉 RESULTADOS DE VERIFICACIÓN MÓVIL: 16/16 exitosas.
 ========================================================
+```
+
+### 2. Suite de Pruebas de la API Backend (CRUD General)
+```bash
+npm test
+```
+
+### 3. Ejecutar Todas las Suites
+```bash
+npm run test:all
 ```
 
 ---
 
-## 📡 Documentación de la API RESTful
+## 📡 Especificación de la API RESTful (`/api/v1/incidencias`)
 
-### Entidad Incidencia Urbana (`Incidencia`)
-| Campo | Tipo | Descripción |
-| :--- | :--- | :--- |
-| `id` | `INTEGER` | Identificador único numérico (PK Auto-increment) |
-| `titulo` | `TEXT` | Nombre o título del reporte (mín. 3 caracteres) |
-| `categoria` | `TEXT` | Categoría: `'Bache'`, `'Luminaria'`, `'Semáforo'`, `'Basura/Aseo'` |
-| `descripcion` | `TEXT` | Descripción detallada de la problemática urbana |
-| `latitud` | `REAL` | Coordenada GPS Latitud (-90 a 90) |
-| `longitud` | `REAL` | Coordenada GPS Longitud (-180 a 180) |
-| `estado` | `TEXT` | Estado: `'Ingresado'`, `'Asignado'`, `'En Reparación'`, `'Resuelto'` |
-| `prioridad` | `TEXT` | Prioridad: `'Baja'`, `'Media'`, `'Alta'`, `'Crítica'` |
-| `foto_url` | `TEXT` | URL o ruta opcional a la imagen de evidencia |
-| `creado_en` | `DATETIME` | Marca de tiempo ISO de creación |
+| Método | Endpoint | Descripción | Consumido por |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/incidencias` | Lista todas las incidencias (soporta filtros `categoria`, `estado`, `search`) | Web Panel & Móvil Feed/Mapa |
+| `GET` | `/api/v1/incidencias/:id` | Retorna el detalle completo de una incidencia por ID | Web Modal & Móvil Detalle |
+| `POST` | `/api/v1/incidencias` | Registra una nueva incidencia con coordenadas GPS y foto | Web Form & Móvil Reporte |
+| `PATCH` | `/api/v1/incidencias/:id` | Actualiza estado (`Ingresado`, `Asignado`, `En Reparación`, `Resuelto`) o prioridad | Web Cuadrilla & Móvil Cuadrilla |
+| `DELETE` | `/api/v1/incidencias/:id` | Elimina un registro de incidencia del sistema | Web Panel & Test Suites |
+| `GET` | `/api/v1/incidencias/stats` | Resumen de conteos totales y clasificados por estado | Web KPI Cards & Perfil Móvil |
+| `GET` | `/api/v1/health` | Estado de salud y conectividad del servidor | Monitorización & Tests |
 
 ---
 
-### Endpoints REST
+## 📡 Endpoints REST Detallados
 
 #### 1. Obtener todas las incidencias
 - **Método**: `GET`
@@ -197,131 +310,24 @@ Salida esperada:
 #### 2. Obtener una incidencia específica
 - **Método**: `GET`
 - **Ruta**: `/api/v1/incidencias/:id`
-- **Respuesta de Ejemplo (`200 OK`)**:
-  ```json
-  {
-    "success": true,
-    "data": {
-      "id": 1,
-      "titulo": "Bache profundo en Av. España con Alameda",
-      "categoria": "Bache",
-      "descripcion": "Peligroso evento en calzada derecha sentido sur.",
-      "latitud": -33.4512,
-      "longitud": -70.6695,
-      "estado": "Ingresado",
-      "prioridad": "Alta",
-      "foto_url": "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=600&q=80",
-      "creado_en": "2026-08-02 16:00:00"
-    }
-  }
-  ```
 
-#### 3. Crear una nueva incidencia urbana
+#### 3. Crear una nueva incidencia urbana (Web / Móvil con GPS)
 - **Método**: `POST`
 - **Ruta**: `/api/v1/incidencias`
-- **Payload Request**:
-  ```json
-  {
-    "titulo": "Semáforo fuera de servicio en Av. Providencia",
-    "categoria": "Semáforo",
-    "descripcion": "Cruce con Pedro de Valdivia tiene luces apagadas por aparente fallo eléctrico.",
-    "latitud": -33.4285,
-    "longitud": -70.6184,
-    "prioridad": "Crítica",
-    "foto_url": "https://images.unsplash.com/photo-1508873696983-2df515122519?w=600&q=80"
-  }
-  ```
-- **Respuesta de Ejemplo (`201 Created`)**:
-  ```json
-  {
-    "success": true,
-    "message": "Incidencia registrada exitosamente",
-    "data": {
-      "id": 3,
-      "titulo": "Semáforo fuera de servicio en Av. Providencia",
-      "categoria": "Semáforo",
-      "descripcion": "Cruce con Pedro de Valdivia tiene luces apagadas por aparente fallo eléctrico.",
-      "latitud": -33.4285,
-      "longitud": -70.6184,
-      "estado": "Ingresado",
-      "prioridad": "Crítica",
-      "foto_url": "https://images.unsplash.com/photo-1508873696983-2df515122519?w=600&q=80",
-      "creado_en": "2026-08-02 16:10:00"
-    }
-  }
-  ```
 
-#### 4. Actualizar estado / prioridad de incidencia
+#### 4. Actualizar estado / prioridad de incidencia (Modo Cuadrilla)
 - **Método**: `PATCH` / `PUT`
 - **Ruta**: `/api/v1/incidencias/:id`
-- **Payload Request**:
-  ```json
-  {
-    "estado": "En Reparación",
-    "prioridad": "Crítica"
-  }
-  ```
-- **Respuesta de Ejemplo (`200 OK`)**:
-  ```json
-  {
-    "success": true,
-    "message": "Incidencia actualizada exitosamente",
-    "data": {
-      "id": 3,
-      "titulo": "Semáforo fuera de servicio en Av. Providencia",
-      "categoria": "Semáforo",
-      "descripcion": "Cruce con Pedro de Valdivia tiene luces apagadas por aparente fallo eléctrico.",
-      "latitud": -33.4285,
-      "longitud": -70.6184,
-      "estado": "En Reparación",
-      "prioridad": "Crítica",
-      "foto_url": "https://images.unsplash.com/photo-1508873696983-2df515122519?w=600&q=80",
-      "creado_en": "2026-08-02 16:10:00"
-    }
-  }
-  ```
 
 #### 5. Eliminar una incidencia
 - **Método**: `DELETE`
 - **Ruta**: `/api/v1/incidencias/:id`
-- **Respuesta de Ejemplo (`200 OK`)**:
-  ```json
-  {
-    "success": true,
-    "message": "Incidencia ID 3 eliminada correctamente"
-  }
-  ```
 
 #### 6. Obtener resumen de estadísticas
 - **Método**: `GET`
 - **Ruta**: `/api/v1/incidencias/stats`
-- **Respuesta de Ejemplo (`200 OK`)**:
-  ```json
-  {
-    "success": true,
-    "data": {
-      "Total": 6,
-      "Ingresado": 2,
-      "Asignado": 2,
-      "En Reparación": 1,
-      "Resuelto": 1
-    }
-  }
-  ```
-
----
-
-## 🎨 Características del Frontend Web Municipal
-
-- **Panel de Métricas KPI**: Tarjetas animadas con totales por estado.
-- **Mapa Georreferenciado Interactivo**: Construido con **Leaflet.js** y mosaicos oscuros de CARTO. Los marcadores varían según la categoría de la incidencia.
-- **Captura de Coordenadas al Clic**: Al hacer clic en cualquier punto del mapa, se abre automáticamente el formulario modal con la latitud y longitud autocompletadas.
-- **Filtros en Tiempo Real**: Filtrado por estado, categoría y búsqueda en tiempo real con debounce.
-- **Acciones Rápidas de Cuadrilla**: Botón para avanzar de estado (`Ingresado` ➔ `Asignado` ➔ `En Reparación` ➔ `Resuelto`).
-- **Geolocalización GPS**: Botón para detectar ubicación real mediante la API del navegador.
 
 ---
 
 ## 💻 Desarrollo
-
-Desarrollado para el **Taller de Desarrollo Web y Móvil (Semana 06) - Manuel Miranda**.
+Desarrollado para el **Taller de Desarrollo Web y Móvil** (Semana 09 - Evaluación Sumativa 3 - APTC106) - **Manuel Miranda**.

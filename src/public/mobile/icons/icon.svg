@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <linearGradient id="accent-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+  </defs>
+  <!-- Background Rounded Rect -->
+  <rect width="512" height="512" rx="110" fill="url(#bg-grad)"/>
+  
+  <!-- City Skyline Silhouette -->
+  <path d="M96 384 V 280 H 150 V 220 H 210 V 160 H 290 V 200 H 350 V 250 H 416 V 384 Z" fill="#1e293b" opacity="0.6"/>
+  <path d="M120 384 V 300 H 160 V 260 H 230 V 210 H 280 V 384 Z" fill="#334155" opacity="0.8"/>
+
+  <!-- Location Pin / Signal Alert -->
+  <g transform="translate(256, 210)">
+    <!-- Pin Outer Glow / Beacon -->
+    <circle cx="0" cy="0" r="85" fill="#38bdf8" opacity="0.25"/>
+    <circle cx="0" cy="0" r="65" fill="#0284c7" opacity="0.4"/>
+    <!-- Pin Shape -->
+    <path d="M0 -75 C -42 -75, -75 -42, -75 0 C -75 52, 0 105, 0 105 C 0 105, 75 52, 75 0 C 75 -42, 42 -75, 0 -75 Z" fill="url(#accent-grad)"/>
+    <circle cx="0" cy="-5" r="26" fill="#ffffff"/>
+    <path d="M -8 -13 L 8 -13 L 5 3 L -5 3 Z M -6 9 L 6 9 L 5 15 L -5 15 Z" fill="#0284c7"/>
+  </g>
+
+  <!-- Pulse Rings -->
+  <circle cx="256" cy="315" r="28" fill="none" stroke="#38bdf8" stroke-width="6" opacity="0.8"/>
+</svg>

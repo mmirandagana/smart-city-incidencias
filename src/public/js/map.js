@@ -36,8 +36,8 @@ export function initMap(containerId = 'map', onMapClick = null) {
     zoomControl: false
   }).setView([-33.4489, -70.6693], 13);
 
-  // Agregar Control de Zoom abajo a la derecha
-  L.control.zoom({ position: 'bottomright' }).addTo(map);
+  // Agregar Control de Zoom arriba a la derecha dentro del mapa visible
+  L.control.zoom({ position: 'topright' }).addTo(map);
 
   // Capa de Mapa Oscuro (CartoDB Dark Matter)
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -159,4 +159,10 @@ export function centerMapOn(lat, lng, zoom = 16) {
     animate: true,
     duration: 1.2
   });
+}
+
+export function invalidateMapSize() {
+  if (map) {
+    setTimeout(() => map.invalidateSize(), 50);
+  }
 }

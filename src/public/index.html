@@ -62,6 +62,10 @@
       </div>
 
       <div class="flex items-center gap-3">
+        <a href="/mobile/" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 text-xs font-semibold border border-cyan-500/30 transition shadow-sm" title="Abrir Cliente Móvil Ciudadano / Cuadrilla">
+          <i class="fa-solid fa-mobile-screen-button text-cyan-400"></i>
+          <span>App Móvil (PWA)</span>
+        </a>
         <button id="btn-seed-data" title="Reiniciar datos de prueba" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition">
           <i class="fa-solid fa-rotate text-cyan-400"></i> Restablecer Demo
         </button>
@@ -188,11 +192,11 @@
     </section>
 
     <!-- CONTENT DISPLAY AREA (MAP + TABLE/LIST) -->
-    <div id="content-grid" class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-[500px]">
+    <div id="content-grid" class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[580px] lg:h-[620px] min-h-[500px]">
       
       <!-- MAP PANEL -->
-      <div id="map-panel" class="lg:col-span-7 bg-slate-900/80 rounded-2xl border border-slate-800 flex flex-col overflow-hidden shadow-lg relative min-h-[400px]">
-        <div class="px-4 py-3 border-b border-slate-800/80 flex items-center justify-between bg-slate-900/50">
+      <div id="map-panel" class="lg:col-span-7 bg-slate-900/80 rounded-2xl border border-slate-800 flex flex-col overflow-hidden shadow-lg relative h-full min-h-0">
+        <div class="px-4 py-3 border-b border-slate-800/80 flex items-center justify-between bg-slate-900/50 flex-shrink-0">
           <div class="flex items-center gap-2">
             <i class="fa-solid fa-map-pin text-cyan-400 text-sm"></i>
             <h2 class="text-sm font-semibold text-white">Mapa Georreferenciado de Incidencias</h2>
@@ -201,12 +205,12 @@
             <i class="fa-solid fa-hand-pointer text-cyan-400"></i> Haz clic en el mapa para capturar coordenadas
           </span>
         </div>
-        <div id="map" class="flex-1 w-full h-full min-h-[420px] z-10"></div>
+        <div id="map" class="flex-1 w-full h-full min-h-0 z-10"></div>
       </div>
 
       <!-- TABLE / LIST PANEL -->
-      <div id="list-panel" class="lg:col-span-5 bg-slate-900/80 rounded-2xl border border-slate-800 flex flex-col overflow-hidden shadow-lg min-h-[400px]">
-        <div class="px-4 py-3 border-b border-slate-800/80 flex items-center justify-between bg-slate-900/50">
+      <div id="list-panel" class="lg:col-span-5 bg-slate-900/80 rounded-2xl border border-slate-800 flex flex-col overflow-hidden shadow-lg h-full min-h-0">
+        <div class="px-4 py-3 border-b border-slate-800/80 flex items-center justify-between bg-slate-900/50 flex-shrink-0">
           <div class="flex items-center gap-2">
             <i class="fa-solid fa-table-list text-cyan-400 text-sm"></i>
             <h2 class="text-sm font-semibold text-white">Gestión Operativa de Incidencias</h2>
@@ -214,7 +218,7 @@
           <span id="incidencias-count-badge" class="text-xs px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 font-medium">0 ítems</span>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar" id="incidencias-container">
+        <div class="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar min-h-0" id="incidencias-container">
           <!-- Dinámicamente cargado vía UI.js -->
         </div>
       </div>

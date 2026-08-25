@@ -8,7 +8,9 @@
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
     "seed": "tsx src/config/seed.ts",
-    "test": "node tests/verify-crud.js"
+    "test": "node tests/verify-crud.js",
+    "test:mobile": "node tests/verify-mobile.js",
+    "test:all": "node tests/verify-crud.js && node tests/verify-mobile.js"
   },
   "keywords": [
     "smart-city",

@@ -148,6 +148,7 @@ function setupEventListeners() {
     mapPanel.classList.add('lg:col-span-7');
     listPanel.classList.add('lg:col-span-5');
     updateViewButtons('view-split');
+    MapModule.invalidateMapSize();
   });
 
   document.getElementById('view-map').addEventListener('click', () => {
@@ -155,6 +156,7 @@ function setupEventListeners() {
     mapPanel.classList.remove('hidden', 'lg:col-span-7');
     mapPanel.classList.add('lg:col-span-12');
     updateViewButtons('view-map');
+    MapModule.invalidateMapSize();
   });
 
   document.getElementById('view-list').addEventListener('click', () => {

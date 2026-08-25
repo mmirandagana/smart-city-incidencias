@@ -94,3 +94,32 @@
 .toast-animate {
   animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* Enmarque y límites para Mapa y Panel de Gestión */
+#content-grid {
+  height: 600px;
+  min-height: 500px;
+}
+
+#map-panel, #list-panel {
+  height: 100%;
+  min-height: 0;
+}
+
+#map {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+}
+
+@media (max-width: 1023px) {
+  #content-grid {
+    height: auto;
+  }
+  #map-panel {
+    height: 440px;
+  }
+  #list-panel {
+    height: 520px;
+  }
+}
