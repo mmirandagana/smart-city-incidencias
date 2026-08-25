@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>CityAlert - Reporte Ciudadano</title>
+
+  <!-- PWA & Mobile Meta Tags -->
+  <link rel="manifest" href="/mobile/manifest.json">
+  <meta name="theme-color" content="#0284c7">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CityAlert">
+  <link rel="apple-touch-icon" href="/mobile/icons/icon.svg">
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#075985'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Custom Mobile CSS -->
+  <link rel="stylesheet" href="/mobile/css/mobile.css">
+</head>
+<body>
+
+  <!-- CONTENEDOR PRINCIPAL DE LA APP MÓVIL (Mockup Frame) -->
+  <div id="app-container">
+
+    <!-- 1. HEADER MÓVIL SUPERIOR -->
+    <header class="mobile-header">
+      <div class="flex items-center gap-2">
+        <button id="mobile-back-btn" data-action="back" class="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center text-slate-300 active:bg-slate-800 hidden" aria-label="Volver">
+          <i class="fa-solid fa-chevron-left text-lg"></i>
+        </button>
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-sky-600 flex items-center justify-center shadow-md shadow-cyan-500/20">
+            <i class="fa-solid fa-city text-white text-xs"></i>
+          </div>
+          <div>
+            <h1 id="mobile-header-title" class="text-sm font-bold text-white tracking-tight">CityAlert</h1>
+            <p class="text-[10px] text-slate-400 leading-none">Smart City Móvil</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <div id="network-status-badge" class="text-xs px-2 py-0.5 rounded-full bg-emerald-950/60 text-emerald-300 border border-emerald-800/40 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Online
+        </div>
+      </div>
+    </header>
+
+    <!-- BANNER DE INSTALACIÓN PWA (Mostrado cuando hay prompt disponible) -->
+    <div id="pwa-install-banner" class="bg-gradient-to-r from-sky-900 to-cyan-900 border-b border-cyan-500/30 px-4 py-2 flex items-center justify-between z-30 hidden">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-mobile-screen-button text-cyan-300 text-sm"></i>
+        <span class="text-xs text-white font-medium">Instala CityAlert como App</span>
+      </div>
+      <button id="btn-install-banner" class="btn-touch bg-cyan-500 text-slate-950 font-bold text-xs px-3 py-1 rounded-lg">
+        Instalar
+      </button>
+    </div>
+
+    <!-- 2. VIEWPORT DE PANTALLAS (SPA CONTENEDORES) -->
+    <main class="screens-viewport">
+
+      <!-- ============================================================== -->
+      <!-- PANTALLA 1: SCREEN-HOME (Feed de Reportes Ciudadanos) -->
+      <!-- ============================================================== -->
+      <section id="screen-home" class="mobile-screen active">
+        <!-- Saludo Ciudadano y Resumen -->
+        <div class="bg-gradient-to-br from-slate-900 to-sky-950 border border-slate-800 p-4 rounded-2xl mb-4 shadow-lg shadow-black/30">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs text-cyan-400 font-semibold uppercase tracking-wider">Comunidad Activa</span>
+            <button id="btn-refresh-feed" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 active:scale-95" title="Actualizar Feed">
+              <i class="fa-solid fa-rotate-right text-xs"></i>
+            </button>
+          </div>
+          <h2 class="text-base font-bold text-white leading-tight">Reportes Urbanos en Tiempo Real</h2>
+          <p class="text-xs text-slate-400 mt-1">Monitorea y reporta incidentes en tu comuna directamente a las cuadrillas municipales.</p>
+        </div>
+
+        <!-- Filtros Rápidos por Categoría -->
+        <div class="flex gap-2 overflow-x-auto pb-2 mb-3 scrollbar-none text-xs">
+          <button class="feed-filter-btn px-3 py-1.5 rounded-full bg-sky-600 text-white font-medium whitespace-nowrap active:scale-95 transition-all" data-filter="all">
+            Todos
+          </button>
+          <button class="feed-filter-btn px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 font-medium whitespace-nowrap active:scale-95 transition-all" data-filter="Bache">
+            🚧 Baches
+          </button>
+          <button class="feed-filter-btn px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 font-medium whitespace-nowrap active:scale-95 transition-all" data-filter="Luminaria">
+            💡 Alumbrado
+          </button>
+          <button class="feed-filter-btn px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 font-medium whitespace-nowrap active:scale-95 transition-all" data-filter="Semáforo">
+            🚦 Semáforos
+          </button>
+          <button class="feed-filter-btn px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 font-medium whitespace-nowrap active:scale-95 transition-all" data-filter="Basura/Aseo">
+            🗑️ Basura
+          </button>
+        </div>
+
+        <!-- Contenedor Dinámico del Feed -->
+        <div id="mobile-feed-container">
+          <!-- Cargado dinámicamente vía mobile-app.js -->
+        </div>
+      </section>
+
+      <!-- ============================================================== -->
+      <!-- PANTALLA 2: SCREEN-REPORT (Formulario con GPS y Foto) -->
+      <!-- ============================================================== -->
+      <section id="screen-report" class="mobile-screen">
+        <form id="mobile-report-form" class="space-y-4">
+          
+          <!-- Selector Visual de Categorías -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-2">1. Selecciona el Tipo de Incidencia</label>
+            <div class="category-pill-grid">
+              <button type="button" class="category-pill-btn selected" data-category="Bache">
+                <i class="fa-solid fa-triangle-exclamation text-orange-400"></i>
+                <div class="text-left">
+                  <div class="font-bold">Bache</div>
+                  <div class="text-[10px] text-slate-400">Calzadas y hoyos</div>
+                </div>
+              </button>
+
+              <button type="button" class="category-pill-btn" data-category="Luminaria">
+                <i class="fa-solid fa-lightbulb text-yellow-400"></i>
+                <div class="text-left">
+                  <div class="font-bold">Luminaria</div>
+                  <div class="text-[10px] text-slate-400">Alumbrado público</div>
+                </div>
+              </button>
+
+              <button type="button" class="category-pill-btn" data-category="Semáforo">
+                <i class="fa-solid fa-traffic-light text-red-400"></i>
+                <div class="text-left">
+                  <div class="font-bold">Semáforo</div>
+                  <div class="text-[10px] text-slate-400">Falla de señalética</div>
+                </div>
+              </button>
+
+              <button type="button" class="category-pill-btn" data-category="Basura/Aseo">
+                <i class="fa-solid fa-trash-can text-emerald-400"></i>
+                <div class="text-left">
+                  <div class="font-bold">Basura / Aseo</div>
+                  <div class="text-[10px] text-slate-400">Microbasurales</div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Geolocalización GPS en Tiempo Real -->
+          <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-2xl space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                <i class="fa-solid fa-satellite text-cyan-400"></i> 2. Ubicación GPS
+              </label>
+              <button type="button" id="btn-refresh-gps" class="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 active:scale-95">
+                <i class="fa-solid fa-arrows-rotate text-[10px]"></i> Recalibrar
+              </button>
+            </div>
+            
+            <div id="gps-status-indicator" class="p-2.5 bg-slate-950/80 rounded-xl border border-slate-800/80 text-xs">
+              <i class="fa-solid fa-spinner fa-spin text-cyan-400"></i> Capturando coordenadas satelitales...
+            </div>
+          </div>
+
+          <!-- Título y Descripción -->
+          <div class="space-y-3">
+            <div>
+              <label for="report-title" class="block text-xs font-semibold text-slate-300 mb-1">3. Título del Reporte</label>
+              <input type="text" id="report-title" required minlength="3" placeholder="Ej: Bache profundo en cruce vehicular" 
+                     class="touch-control w-full bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+            </div>
+
+            <div>
+              <label for="report-desc" class="block text-xs font-semibold text-slate-300 mb-1">4. Descripción del Problema</label>
+              <textarea id="report-desc" rows="3" placeholder="Describe los detalles de la situación..." 
+                        class="touch-control w-full bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 resize-none"></textarea>
+            </div>
+          </div>
+
+          <!-- Prioridad -->
+          <div>
+            <label for="report-priority" class="block text-xs font-semibold text-slate-300 mb-1">5. Nivel de Urgencia</label>
+            <select id="report-priority" class="touch-control w-full bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-cyan-500">
+              <option value="Baja">Baja (No genera riesgo inmediato)</option>
+              <option value="Media" selected>Media (Molestia o tránsito lento)</option>
+              <option value="Alta">Alta (Riesgo vehicular / peatonal)</option>
+              <option value="Crítica">Crítica (Emergencia inminente)</option>
+            </select>
+          </div>
+
+          <!-- Carga Simulada de Fotografía con Cámara -->
+          <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-2xl">
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                <i class="fa-solid fa-camera text-cyan-400"></i> 6. Fotografía de Evidencia
+              </label>
+              <button type="button" id="btn-take-photo" class="text-xs px-2.5 py-1 rounded-lg bg-sky-900/60 border border-sky-700 text-cyan-300 active:scale-95 flex items-center gap-1">
+                <i class="fa-solid fa-shutter text-xs"></i> Capturar
+              </button>
+            </div>
+            
+            <div class="relative w-full h-32 rounded-xl overflow-hidden bg-slate-950 border border-slate-800 flex items-center justify-center">
+              <img id="report-photo-preview" src="https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=600&q=80" alt="Preview" class="w-full h-full object-cover">
+              <div class="absolute bottom-2 left-2 bg-slate-900/80 backdrop-blur px-2 py-0.5 rounded text-[10px] text-slate-300">
+                Foto adjunta de referencia
+              </div>
+            </div>
+          </div>
+
+          <!-- Botón de Envío -->
+          <div class="pt-2">
+            <button type="submit" id="btn-submit-report" class="btn-touch w-full bg-gradient-to-r from-cyan-500 to-sky-600 hover:from-cyan-400 hover:to-sky-500 text-white font-bold text-sm shadow-lg shadow-cyan-500/25">
+              <i class="fa-solid fa-paper-plane"></i> Publicar Incidencia
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- ============================================================== -->
+      <!-- PANTALLA 3: SCREEN-MAP (Mapa Leaflet Vertical & Marcadores) -->
+      <!-- ============================================================== -->
+      <section id="screen-map" class="mobile-screen map-screen-wrapper">
+        <div id="mobile-leaflet-map"></div>
+
+        <!-- Botón Flotante para Ubicación -->
+        <button id="btn-map-locate-me" class="absolute top-4 right-4 z-20 w-11 h-11 rounded-xl bg-slate-900/90 backdrop-blur border border-slate-700 text-cyan-400 shadow-lg flex items-center justify-center active:scale-90" title="Mi Ubicación">
+          <i class="fa-solid fa-crosshairs text-base"></i>
+        </button>
+
+        <!-- Bottom Sheet de Resumen al hacer clic en Marcador -->
+        <div id="map-bottom-sheet" class="map-bottom-sheet">
+          <div class="flex justify-end mb-1">
+            <button id="btn-close-bottom-sheet" class="text-slate-400 text-xs px-2 py-0.5 hover:text-white">✕ Cerrar</button>
+          </div>
+          <div id="map-bottom-sheet-content">
+            <!-- Cargado dinámicamente -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================== -->
+      <!-- PANTALLA 4: SCREEN-DETAIL (Detalle & Modo Cuadrilla) -->
+      <!-- ============================================================== -->
+      <section id="screen-detail" class="mobile-screen">
+        <div id="detail-content-area" class="mb-4">
+          <!-- Cargado dinámicamente -->
+        </div>
+
+        <!-- Panel de Gestión de Estado para Cuadrilla -->
+        <div id="detail-cuadrilla-panel" class="bg-gradient-to-br from-slate-900 to-amber-950/40 border border-amber-500/30 p-4 rounded-2xl space-y-3 hidden">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-screwdriver-wrench text-amber-400"></i>
+              <span class="text-xs font-bold text-amber-300 uppercase tracking-wider">Panel de Cuadrilla Municipal</span>
+            </div>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono">PATCH</span>
+          </div>
+
+          <p class="text-xs text-slate-300">Actualiza el estado del trabajo operativo en terreno:</p>
+
+          <div class="grid grid-cols-2 gap-2">
+            <button class="btn-change-status btn-touch text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700" data-status="Ingresado">
+              <i class="fa-regular fa-circle"></i> Ingresado
+            </button>
+            <button class="btn-change-status btn-touch text-xs bg-sky-900/60 hover:bg-sky-800 text-sky-200 border border-sky-700" data-status="Asignado">
+              <i class="fa-solid fa-user-check"></i> Asignado
+            </button>
+            <button class="btn-change-status btn-touch text-xs bg-amber-900/60 hover:bg-amber-800 text-amber-200 border border-amber-700" data-status="En Reparación">
+              <i class="fa-solid fa-wrench"></i> En Reparación
+            </button>
+            <button class="btn-change-status btn-touch text-xs bg-emerald-900/60 hover:bg-emerald-800 text-emerald-200 border border-emerald-700" data-status="Resuelto">
+              <i class="fa-solid fa-circle-check"></i> Resuelto
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================== -->
+      <!-- PANTALLA 5: SCREEN-PROFILE (Perfil & Distribución Directa) -->
+      <!-- ============================================================== -->
+      <section id="screen-profile" class="mobile-screen">
+        <div class="space-y-4">
+          
+          <!-- Tarjeta de Usuario / Cuadrilla -->
+          <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex items-center gap-3">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-2xl shadow-lg">
+              <i class="fa-solid fa-user-shield"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="font-bold text-white text-sm">Operador de Turno</h3>
+              <p class="text-xs text-slate-400">Municipalidad de Santiago</p>
+              <div class="mt-1">
+                <span id="user-role-badge" class="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-medium">
+                  Vecino Ciudadano
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Switch Modo Cuadrilla -->
+          <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex items-center justify-between">
+            <div class="space-y-0.5">
+              <div class="font-semibold text-xs text-white flex items-center gap-1.5">
+                <i class="fa-solid fa-helmet-safety text-amber-400"></i> Modo Cuadrilla Terreno
+              </div>
+              <p class="text-[11px] text-slate-400">Habilita herramientas de actualización de estado.</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" class="cuadrilla-mode-switch">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <!-- Estadísticas Rápidas -->
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-xl text-center">
+              <div id="profile-stat-total" class="text-xl font-bold text-cyan-400">0</div>
+              <div class="text-[11px] text-slate-400">Incidencias Totales</div>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-xl text-center">
+              <div id="profile-stat-resolved" class="text-xl font-bold text-emerald-400">0</div>
+              <div class="text-[11px] text-slate-400">Casos Resueltos</div>
+            </div>
+          </div>
+
+          <!-- Sección de Distribución Directa (PWA & APK) -->
+          <div class="bg-gradient-to-br from-slate-900 to-sky-950/60 border border-cyan-500/30 p-4 rounded-2xl space-y-3">
+            <div class="flex items-center gap-2 text-cyan-300 text-xs font-bold uppercase tracking-wider">
+              <i class="fa-solid fa-download"></i> Distribución Directa (Sin Tiendas)
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Esta aplicación está diseñada para ser instalada directamente en el dispositivo del funcionario o vecino sin requerir publicación en Google Play o App Store.
+            </p>
+
+            <div class="space-y-2 pt-1">
+              <!-- Opción 1: PWA -->
+              <button id="btn-pwa-install-profile" class="btn-touch w-full bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold rounded-xl">
+                <i class="fa-solid fa-plus-circle"></i> Instalar como PWA en Pantalla de Inicio
+              </button>
+
+              <!-- Opción 2: APK Capacitor -->
+              <div class="p-3 bg-slate-950/70 border border-slate-800 rounded-xl space-y-1.5 text-xs">
+                <div class="font-bold text-slate-200 flex items-center gap-1.5">
+                  <i class="fa-brands fa-android text-emerald-400"></i> Empaquetado APK Nativo (Capacitor)
+                </div>
+                <p class="text-[11px] text-slate-400">
+                  Configurado en <code class="text-cyan-400">capacitor.config.json</code> con appId <code class="text-slate-300">cl.unab.smartcity.incidencias</code>.
+                </p>
+                <div class="text-[10px] text-slate-500 font-mono bg-slate-900 p-2 rounded border border-slate-800 overflow-x-auto">
+                  npx cap add android<br>
+                  npx cap sync<br>
+                  npx cap build android
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Acceso al Panel Web Municipal -->
+          <div class="text-center pt-2">
+            <a href="/" class="text-xs text-slate-400 hover:text-cyan-400 underline transition-colors">
+              Ir al Dashboard Web Municipal ➔
+            </a>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+
+    <!-- 3. BOTÓN FLOTANTE DE ACCIÓN RÁPIDA (FAB + en esquina inferior derecha) -->
+    <button id="mobile-global-fab" class="fab-button" data-nav="screen-report" aria-label="Nuevo Reporte" title="Reportar Incidencia">
+      <i class="fa-solid fa-plus"></i>
+    </button>
+
+    <!-- 4. BARRA DE NAVEGACIÓN INFERIOR LIMPIA (BOTTOM TAB BAR) -->
+    <nav class="mobile-tab-bar" aria-label="Navegación Móvil">
+      <button class="tab-button active" data-nav="screen-home" aria-label="Inicio">
+        <i class="fa-solid fa-house"></i>
+        <span>Inicio</span>
+      </button>
+
+      <button class="tab-button" data-nav="screen-map" aria-label="Mapa">
+        <i class="fa-solid fa-map-location-dot"></i>
+        <span>Mapa</span>
+      </button>
+
+      <button class="tab-button" data-nav="screen-profile" aria-label="Perfil">
+        <i class="fa-solid fa-id-card"></i>
+        <span>Perfil</span>
+      </button>
+    </nav>
+
+    <!-- 5. TOAST NOTIFICATION FLOTANTE -->
+    <div id="mobile-toast">
+      <i class="fa-solid fa-circle-info text-cyan-400"></i>
+      <span id="mobile-toast-msg">Notificación</span>
+    </div>
+
+  </div>
+
+  <!-- SCRIPTS DE LA APLICACIÓN MÓVIL -->
+  <script src="/mobile/js/mobile-router.js"></script>
+  <script src="/mobile/js/mobile-gps.js"></script>
+  <script src="/mobile/js/mobile-app.js"></script>
+</body>
+</html>

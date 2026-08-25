@@ -1,0 +1,33 @@
+{
+  "name": "Smart City - Reporte Ciudadano",
+  "short_name": "CityAlert",
+  "description": "Aplicación móvil de reporte ciudadano y gestión de cuadrillas para incidencias urbanas.",
+  "start_url": "/mobile/",
+  "scope": "/mobile/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#090d16",
+  "theme_color": "#0284c7",
+  "lang": "es-CL",
+  "categories": ["utilities", "government", "productivity"],
+  "icons": [
+    {
+      "src": "/mobile/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/mobile/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/mobile/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

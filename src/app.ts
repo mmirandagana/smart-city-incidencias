@@ -30,12 +30,28 @@ app.get('/api/v1/health', (_req: Request, res: Response) => {
   });
 });
 
-// Ruta Fallback para SPA / Frontend Web
+// Redirección conveniente /mobile -> /mobile/
+app.get('/mobile', (_req: Request, res: Response) => {
+  res.redirect(301, '/mobile/');
+});
+
+// Ruta Fallback para SPA Móvil (/mobile/*) y Frontend Web Municipal (/*)
 app.get('*', (req: Request, res: Response, next: NextFunction) => {
   if (req.path.startsWith('/api')) {
     res.status(404).json({ success: false, error: 'Endpoint API no encontrado' });
     return;
   }
+  
+  if (req.path.startsWith('/mobile')) {
+    const mobileIndexPath = path.join(publicPath, 'mobile', 'index.html');
+    res.sendFile(mobileIndexPath, (err) => {
+      if (err) {
+        next(err);
+      }
+    });
+    return;
+  }
+
   const indexPath = path.join(publicPath, 'index.html');
   res.sendFile(indexPath, (err) => {
     if (err) {

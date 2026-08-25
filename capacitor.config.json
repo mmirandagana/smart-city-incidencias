@@ -1,0 +1,6 @@
+{
+  "appId": "cl.unab.smartcity.incidencias",
+  "appName": "Smart City Mobile",
+  "webDir": "src/public/mobile",
+  "bundledWebRuntime": false
+}
