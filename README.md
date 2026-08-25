@@ -279,5 +279,55 @@ npm run test:all
 
 ---
 
-## 💻 Asignatura y Evaluación
-Desarrollado para el **Taller de Desarrollo Web y Móvil** (Semana 09 - Evaluación Sumativa 3 - APTC106).
+## 📡 Endpoints REST Detallados
+
+#### 1. Obtener todas las incidencias
+- **Método**: `GET`
+- **Ruta**: `/api/v1/incidencias`
+- **Query Params (Opcionales)**: `estado`, `categoria`, `prioridad`, `search`
+- **Respuesta de Ejemplo (`200 OK`)**:
+  ```json
+  {
+    "success": true,
+    "count": 1,
+    "data": [
+      {
+        "id": 1,
+        "titulo": "Bache profundo en Av. España con Alameda",
+        "categoria": "Bache",
+        "descripcion": "Peligroso evento en calzada derecha sentido sur.",
+        "latitud": -33.4512,
+        "longitud": -70.6695,
+        "estado": "Ingresado",
+        "prioridad": "Alta",
+        "foto_url": "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=600&q=80",
+        "creado_en": "2026-08-02 16:00:00"
+      }
+    ]
+  }
+  ```
+
+#### 2. Obtener una incidencia específica
+- **Método**: `GET`
+- **Ruta**: `/api/v1/incidencias/:id`
+
+#### 3. Crear una nueva incidencia urbana (Web / Móvil con GPS)
+- **Método**: `POST`
+- **Ruta**: `/api/v1/incidencias`
+
+#### 4. Actualizar estado / prioridad de incidencia (Modo Cuadrilla)
+- **Método**: `PATCH` / `PUT`
+- **Ruta**: `/api/v1/incidencias/:id`
+
+#### 5. Eliminar una incidencia
+- **Método**: `DELETE`
+- **Ruta**: `/api/v1/incidencias/:id`
+
+#### 6. Obtener resumen de estadísticas
+- **Método**: `GET`
+- **Ruta**: `/api/v1/incidencias/stats`
+
+---
+
+## 💻 Desarrollo
+Desarrollado para el **Taller de Desarrollo Web y Móvil** (Semana 09 - Evaluación Sumativa 3 - APTC106) - **Manuel Miranda**.
