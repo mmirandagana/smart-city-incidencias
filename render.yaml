@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: smart-city-incidencias
+    runtime: docker
+    plan: starter
+    region: oregon
+    branch: main
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DB_PATH
+        value: /data/database.sqlite
+    disk:
+      name: sqlite_data
+      mountPath: /data
+      sizeGB: 1

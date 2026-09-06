@@ -12,17 +12,30 @@ Plataforma integral de reporte y gestión de incidencias urbanas municipales (ba
 
 ```
 smart-city-incidencias/
-├── capacitor.config.json               # Configuración para empaquetado APK directo (Capacitor)
+├── .github/
+│   └── workflows/
+│       └── deploy.yml                  # 🚀 Pipeline de CI/CD automatizado (GitHub Actions)
+├── android/                            # 🤖 Plataforma nativa Android (Capacitor)
+│   └── app/
+│       ├── build.gradle                # Configuración de compilación Android
+│       └── src/main/AndroidManifest.xml# Permisos nativos (GPS satelital, Cámara, Red)
+├── ios/                                # 🍎 Plataforma nativa iOS (Capacitor)
+│   └── App/App/Info.plist              # Configuración y permisos nativos iOS
+├── capacitor.config.json               # Configuración híbrida multiplataforma (Capacitor v6)
+├── Dockerfile                          # 🐳 Contenerización multi-stage para producción (Alpine)
+├── .dockerignore                       # Exclusiones de contexto para optimización de imagen
+├── docker-compose.yml                  # 📦 Orquestación local/producción con volumen persistente
+├── render.yaml                         # ☁️ Blueprint PaaS para Render con Persistent Disk SQLite
 ├── database.sqlite                     # Base de datos local SQLite3
-├── package.json                        # Scripts de compilación y pruebas automatizadas
+├── package.json                        # Scripts de compilación, Capacitor, Docker y pruebas
 ├── tsconfig.json                       # Configuración de compilador TypeScript
 ├── .env                                # Variables de entorno (PORT, DB_PATH)
-├── README.md                           # Documentación técnica del ecosistema
+├── README.md                           # Documentación técnica integral del ecosistema
 ├── src/
 │   ├── app.ts                          # Express, middlewares, estáticos y fallback SPA dual
-│   ├── server.ts                       # Entrypoint y listener HTTP
+│   ├── server.ts                       # Entrypoint, listener HTTP y graceful shutdown
 │   ├── config/
-│   │   ├── database.ts                 # Patrón Singleton de conexión SQLite3
+│   │   ├── database.ts                 # Patrón Singleton SQLite3 con autocreación de directorios
 │   │   └── seed.ts                     # Poblado inicial de prueba
 │   ├── models/
 │   │   └── incidencia.model.ts         # Tipos e invariantes de dominio
@@ -51,7 +64,8 @@ smart-city-incidencias/
 └── tests/
     ├── test-api.http                   # Suite REST Client (VS Code)
     ├── verify-crud.js                  # Suite de pruebas automatizadas Backend CRUD
-    └── verify-mobile.js                # Suite de pruebas automatizadas Cliente Móvil & PWA
+    ├── verify-mobile.js                # Suite de pruebas automatizadas Cliente Móvil & PWA
+    └── verify-deployment.js            # Suite de pruebas de despliegue Cloud & Plataforma Híbrida
 ```
 
 ---
@@ -202,63 +216,78 @@ npm start
 
 Con el servidor en ejecución, puedes correr las suites de pruebas integrales:
 
-### 1. Suite de Pruebas del Cliente Móvil & PWA
+### 1. Suite de Auditoría de Despliegue Cloud & Arquitectura Híbrida
+Audita automáticamente la configuración multiplataforma de Capacitor (Android/iOS), los artefactos de infraestructura Docker, Docker Compose, el blueprint PaaS de Render, el pipeline de CI/CD y la conectividad HTTP/PWA de todos los endpoints:
+```bash
+npm run test:deploy
+# o alternativamente:
+node tests/verify-deployment.js
+```
+
+Salida esperada:
+```
+☁️ ================================================================
+☁️  SUITE DE VERIFICACIÓN DE DESPLIEGUE CLOUD & ARQUITECTURA HÍBRIDA
+☁️ ================================================================
+
+📱 --- BLOQUE 1: Configuración Multiplataforma Capacitor iOS/Android ---
+✅ [PASS 1] Existe capacitor.config.json en raíz
+✅ [PASS 2] capacitor.config.json: appId es "cl.smartcity.incidencias"
+✅ [PASS 3] capacitor.config.json: appName es "smart-city-incidencias"
+✅ [PASS 4] capacitor.config.json: webDir apunta a "src/public/mobile"
+✅ [PASS 5] Existe android/app/src/main/AndroidManifest.xml
+✅ [PASS 6] AndroidManifest.xml declara package cl.smartcity.incidencias y permisos GPS/Hardware
+✅ [PASS 7] Existe ios/App/App/Info.plist
+✅ [PASS 8] Info.plist declara CFBundleIdentifier cl.smartcity.incidencias y permisos de geolocalización
+✅ [PASS 9] package.json contiene dependencias @capacitor/core, @capacitor/android y @capacitor/ios
+✅ [PASS 10] package.json incluye scripts de compilación y sincronización móvil ("cap:sync", "build:mobile")
+
+🐳 --- BLOQUE 2: Contenerización Docker & Cloud Config ---
+✅ [PASS 11] Existe Dockerfile en la raíz del proyecto
+✅ [PASS 12] Dockerfile implementa arquitectura multi-stage (Stage 1: builder, Stage 2: runner)
+✅ [PASS 13] Dockerfile utiliza node:18-alpine y ejecuta dist/server.js
+✅ [PASS 14] Existe archivo .dockerignore
+✅ [PASS 15] .dockerignore excluye node_modules, android, ios y artefactos temporales
+✅ [PASS 16] Existe docker-compose.yml
+✅ [PASS 17] docker-compose.yml define servicio web con volumen nombrado sqlite_data
+✅ [PASS 18] Existe render.yaml para despliegue Cloud
+✅ [PASS 19] render.yaml especifica servicio tipo web y runtime docker
+✅ [PASS 20] render.yaml configura disco persistente en /data y variable DB_PATH=/data/database.sqlite
+✅ [PASS 21] Existe pipeline .github/workflows/deploy.yml
+✅ [PASS 22] Pipeline de CI/CD automatiza build TypeScript, pruebas de integración y validación Docker
+
+🌐 --- BLOQUE 3: Auditoría de Endpoints Web, Móvil & API REST ---
+🖥️ Auditando Endpoint Raíz (Dashboard Web Municipal)...
+✅ [PASS 23] GET / responde HTTP 200 OK
+✅ [PASS 24] GET / entrega Dashboard HTML con contenedor de mapa
+📱 Auditando App Shell Móvil (/mobile y /mobile/)...
+✅ [PASS 25] GET /mobile/ responde HTTP 200 OK
+✅ [PASS 26] GET /mobile/ entrega App Shell SPA
+⚡ Auditando Artefactos PWA...
+✅ [PASS 27] GET /mobile/manifest.json responde HTTP 200 con manifest válido
+✅ [PASS 28] GET /mobile/sw.js responde HTTP 200 con Service Worker
+📡 Auditando API RESTful (/api/v1/incidencias)...
+✅ [PASS 29] GET /api/v1/incidencias responde HTTP 200 OK
+✅ [PASS 30] Encabezado Content-Type es application/json
+✅ [PASS 31] Payload retornado contiene array de incidencias
+
+================================================================
+🎉 RESUMEN DE AUDITORÍA DE DESPLIEGUE: 31/31 pruebas exitosas.
+================================================================
+```
+
+### 2. Suite de Pruebas del Cliente Móvil & PWA
 Valida la entrega de `/mobile/`, el manifiesto PWA, el Service Worker, y el ciclo de vida móvil (POST con GPS ➔ GET detalle ➔ PATCH Cuadrilla ➔ DELETE):
 ```bash
 npm run test:mobile
 ```
 
-Salida esperada:
-```
-📱 ========================================================
-📱  SUITE DE PRUEBAS DEL CLIENTE MÓVIL & PWA (SMART CITY)
-📱 ========================================================
-
-📡 1. Verificando disponibilidad del backend (/api/v1/health)...
-✅ [PASS 1] Servidor backend en línea (HTTP 200)
-
-📱 2. Verificando entrega del HTML Shell Móvil (/mobile/)...
-✅ [PASS 2] Ruta /mobile/ responde HTTP 200 OK
-✅ [PASS 3] HTML contiene el contenedor principal #app-container
-✅ [PASS 4] HTML contiene las vistas Mockup requeridas
-
-📄 3. Verificando Web App Manifest PWA (/mobile/manifest.json)...
-✅ [PASS 5] Ruta /mobile/manifest.json responde HTTP 200 OK
-✅ [PASS 6] Manifest contiene short_name "CityAlert"
-✅ [PASS 7] Manifest define display "standalone"
-✅ [PASS 8] Manifest define start_url "/mobile/"
-
-⚙️ 4. Verificando Service Worker (/mobile/sw.js)...
-✅ [PASS 9] Service Worker accesible en HTTP 200
-✅ [PASS 10] Service Worker define manejadores de install y fetch
-
-🛰️ 5. Simulando reporte móvil ciudadano con geolocalización GPS (POST /incidencias)...
-✅ [PASS 11] Incidencia móvil creada con HTTP 201 Created
-✅ [PASS 12] Categoría guardada correctamente
-
-🔍 6. Consultando detalle de incidencia ID #10...
-✅ [PASS 13] Incidencia recuperada con éxito para pantalla screen-detail
-
-🛠️ 7. Simulando actualización de estado en Modo Cuadrilla Municipal (PATCH)...
-✅ [PASS 14] Estado actualizado a "En Reparación" vía PATCH
-
-📋 8. Consultando feed móvil actualizado...
-✅ [PASS 15] Feed móvil contiene la incidencia reportada
-
-🗑️ 9. Limpiando datos de prueba (DELETE ID #10)...
-✅ [PASS 16] Incidencia de prueba eliminada correctamente
-
-========================================================
-🎉 RESULTADOS DE VERIFICACIÓN MÓVIL: 16/16 exitosas.
-========================================================
-```
-
-### 2. Suite de Pruebas de la API Backend (CRUD General)
+### 3. Suite de Pruebas de la API Backend (CRUD General)
 ```bash
 npm test
 ```
 
-### 3. Ejecutar Todas las Suites
+### 4. Ejecutar Todas las Suites en Cadena
 ```bash
 npm run test:all
 ```
@@ -329,5 +358,139 @@ npm run test:all
 
 ---
 
-## 💻 Desarrollo
-Desarrollado para el **Taller de Desarrollo Web y Móvil** (Semana 09 - Evaluación Sumativa 3 - APTC106) - **Manuel Miranda**.
+## 📱 Despliegue Híbrido Multiplataforma (Capacitor iOS & Android)
+
+El aplicativo móvil `smart-city-incidencias` soporta compilación y distribución híbrida nativa para **Android** e **iOS** a través de **Capacitor v6**, compartiendo el mismo núcleo web SPA/PWA ubicado en `src/public/mobile`:
+
+### 1. Configuración de Plataforma (`capacitor.config.json`)
+```json
+{
+  "appId": "cl.smartcity.incidencias",
+  "appName": "smart-city-incidencias",
+  "webDir": "src/public/mobile",
+  "bundledWebRuntime": false
+}
+```
+
+### 2. Permisos Nativos Configurados
+- **Android (`android/app/src/main/AndroidManifest.xml`)**:
+  - `ACCESS_FINE_LOCATION` y `ACCESS_COARSE_LOCATION`: Captura de coordenadas GPS en terreno.
+  - `CAMERA`: Captura de evidencia fotográfica de eventos urbanos.
+  - `INTERNET`: Comunicación bidireccional con la API REST.
+- **iOS (`ios/App/App/Info.plist`)**:
+  - `NSLocationWhenInUseUsageDescription`: Autorización de geolocalización satelital.
+  - `NSCameraUsageDescription`: Autorización de acceso al sensor óptico/cámara.
+
+### 3. Comandos de Compilación y Sincronización
+```bash
+# 1. Compilar backend y copiar assets web móviles al directorio nativo
+npm run build:mobile
+
+# 2. Sincronizar plugins y dependencias nativas con Capacitor
+npm run cap:sync
+
+# 3. Abrir proyecto nativo en Android Studio (para generar APK / AAB)
+npx cap open android
+
+# 4. Abrir proyecto nativo en Xcode (macOS requerido para compilar IPA)
+npx cap open ios
+
+# 5. Ejecutar directamente en emulador o dispositivo físico conectado
+npx cap run android
+npx cap run ios
+```
+
+---
+
+## ☁️ Despliegue en la Nube (Cloud Deployment)
+
+La plataforma cuenta con una arquitectura **Cloud-Ready** basada en contenedores Docker y configuración declarativa como código para despliegues confiables y reproducibles:
+
+### 1. Contenerización con Docker (Multi-Stage Build)
+El archivo `Dockerfile` implementa un diseño multi-etapa sobre Alpine Linux que optimiza el tamaño de la imagen final y compila limpiamente las extensiones C++ de SQLite:
+- **Etapa 1 (`builder`)**: Instala dependencias y compila TypeScript a JavaScript nativo (`dist/`).
+- **Etapa 2 (`runner`)**: Imagen limpia con `NODE_ENV=production`, dependencias optimizadas y herramientas de runtime nativas (`python3`, `make`, `g++`).
+
+Comandos de construcción y ejecución local:
+```bash
+# Construir la imagen Docker
+docker build -t smart-city-incidencias .
+
+# Ejecutar el contenedor con volumen para persistencia SQLite
+docker run -d \
+  --name smart-city-app \
+  -p 3000:3000 \
+  -e NODE_ENV=production \
+  -e PORT=3000 \
+  -e DB_PATH=/app/data/database.sqlite \
+  -v smartcity_data:/app/data \
+  smart-city-incidencias
+```
+
+### 2. Orquestación con Docker Compose
+Para levantar el ecosistema completo con un único comando:
+```bash
+# Iniciar servicio en segundo plano
+docker-compose up -d --build
+
+# Ver registros de ejecución
+docker-compose logs -f web
+
+# Detener servicio
+docker-compose down
+```
+
+El volumen `sqlite_data` asegura que la base de datos `/app/data/database.sqlite` no se destruya al reiniciar contenedores.
+
+### 3. Despliegue en Render (PaaS con Blueprint `render.yaml`)
+El repositorio incluye el manifiesto `render.yaml` listo para despliegues automatizados (Infrastructure as Code):
+- **Runtime**: Docker Engine gestionado.
+- **Disco Persistente**: Volumen SSD de 1 GB montado en `/data`.
+- **Persistencia**: La variable `DB_PATH=/data/database.sqlite` garantiza que las incidencias reportadas por los ciudadanos persistan incluso si la instancia se reinicia o se despliega una nueva versión.
+
+**Pasos de despliegue en Render**:
+1. Conecta tu repositorio de GitHub a tu cuenta de Render.
+2. Selecciona **Blueprints** y vincula el repositorio (`render.yaml` se detectará automáticamente).
+3. Haz clic en **Apply**: Render creará el Web Service Docker y provisionará el disco persistente de 1 GB en `/data`.
+
+### 4. Despliegue en AWS (ECS / Fargate o App Runner) & Railway
+- **AWS**: Utilizar AWS ECR para almacenar la imagen Docker y AWS ECS/Fargate vinculando un volumen Amazon EFS para persistencia de la base de datos SQLite.
+- **Railway**: Desplegar el `Dockerfile` directamente asociando un **Persistent Volume** montado en `/data`.
+
+---
+
+## 🚀 Pipeline de Integración y Entrega Continua (CI/CD)
+
+El archivo `.github/workflows/deploy.yml` implementa un flujo de automatización completo ejecutado en cada `push` o `pull_request` a la rama `main`:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      GITHUB ACTIONS CI/CD WORKFLOW                      │
+└────────────────────────────────────┬────────────────────────────────────┘
+                                     │
+         ┌───────────────────────────┴───────────────────────────┐
+         ▼                                                       ▼
+  [1. Checkout & Setup]                                   [2. Dependencies]
+  Node.js v18.x en Ubuntu                                 npm install limpio
+         │                                                       │
+         └───────────────────────────┬───────────────────────────┘
+                                     ▼
+                          [3. Typecheck & Build]
+                          npm run build (tsc)
+                                     │
+         ┌───────────────────────────┴───────────────────────────┐
+         ▼                                                       ▼
+  [4. Service Start]                                      [5. Test Suites]
+  Arranque en background +                                verify-crud.js
+  Healthcheck HTTP polling                                verify-mobile.js
+                                                          verify-deployment.js
+                                     │
+                                     ▼
+                          [6. Docker Build Verify]
+                          docker build . -t smart-city-incidencias:test
+```
+
+---
+
+## 💻 Desarrollo y Evaluación
+Desarrollado para el **Taller de Desarrollo Web y Móvil** (Semana 11 - Evaluación Sumativa 4: Propuesta de Solución y Despliegue Cloud) - **Manuel Miranda**.

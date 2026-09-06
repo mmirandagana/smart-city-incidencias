@@ -1,0 +1,52 @@
+name: CI/CD Pipeline - Smart City Incidencias
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-and-build:
+    name: Build, Test & Docker Verification
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Código Fuente
+        uses: actions/checkout@v4
+
+      - name: 🟢 Configurar Node.js (v18.x)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: 📦 Instalar Dependencias
+        run: npm install
+
+      - name: 🏗️ Compilar TypeScript (Typecheck & Build)
+        run: npm run build
+
+      - name: 🚀 Iniciar Servidor en Segundo Plano para Pruebas
+        run: |
+          node dist/server.js &
+          echo "Esperando que el servidor responda en http://localhost:3000..."
+          for i in {1..30}; do
+            if curl -s http://localhost:3000/api/v1/health | grep "online"; then
+              echo "✅ Servidor listo para pruebas."
+              break
+            fi
+            sleep 1
+          done
+
+      - name: 🧪 Ejecutar Suite de Pruebas CRUD Backend
+        run: node tests/verify-crud.js
+
+      - name: 📱 Ejecutar Suite de Pruebas Móvil & PWA
+        run: node tests/verify-mobile.js
+
+      - name: 🌐 Ejecutar Suite de Pruebas de Despliegue Cloud & Híbrido
+        run: node tests/verify-deployment.js
+
+      - name: 🐳 Validar Construcción de Imagen Docker Multi-Stage
+        run: docker build . -t smart-city-incidencias:test
