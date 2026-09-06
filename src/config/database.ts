@@ -14,7 +14,23 @@ export class Database {
   private isReadyPromise: Promise<void>;
 
   private constructor() {
-    const dbPath = process.env.DB_PATH || path.join(__dirname, '../../database.sqlite');
+    let dbPath = process.env.DB_PATH;
+    if (!dbPath) {
+      if (process.env.VERCEL) {
+        dbPath = '/tmp/database.sqlite';
+        const bundledDb = path.join(__dirname, '../../database.sqlite');
+        if (!fs.existsSync(dbPath) && fs.existsSync(bundledDb)) {
+          try {
+            fs.copyFileSync(bundledDb, dbPath);
+            console.log('📦 Base de datos SQLite precargada en /tmp para Vercel.');
+          } catch (copyErr: any) {
+            console.warn('⚠️ No se pudo copiar SQLite a /tmp:', copyErr.message);
+          }
+        }
+      } else {
+        dbPath = path.join(__dirname, '../../database.sqlite');
+      }
+    }
     const dbDir = path.dirname(dbPath);
     if (!fs.existsSync(dbDir)) {
       try {

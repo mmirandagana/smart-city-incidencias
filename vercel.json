@@ -1,0 +1,35 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/mobile/(.*)",
+      "dest": "/api/index.ts"
+    },
+    {
+      "src": "/mobile",
+      "dest": "/api/index.ts"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.ts"
+    },
+    {
+      "src": "/css/(.*)",
+      "dest": "/src/public/css/$1"
+    },
+    {
+      "src": "/js/(.*)",
+      "dest": "/src/public/js/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.ts"
+    }
+  ]
+}
