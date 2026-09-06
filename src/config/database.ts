@@ -58,29 +58,37 @@ export class Database {
    */
   private initSchema(): Promise<void> {
     return new Promise((resolve, reject) => {
-      const query = `
-        CREATE TABLE IF NOT EXISTS incidencias (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          titulo TEXT NOT NULL,
-          categoria TEXT NOT NULL CHECK(categoria IN ('Bache', 'Luminaria', 'Semáforo', 'Basura/Aseo')),
-          descripcion TEXT NOT NULL,
-          latitud REAL NOT NULL,
-          longitud REAL NOT NULL,
-          estado TEXT NOT NULL DEFAULT 'Ingresado' CHECK(estado IN ('Ingresado', 'Asignado', 'En Reparación', 'Resuelto')),
-          prioridad TEXT NOT NULL DEFAULT 'Media' CHECK(prioridad IN ('Baja', 'Media', 'Alta', 'Crítica')),
-          foto_url TEXT,
-          creado_en DATETIME DEFAULT CURRENT_TIMESTAMP
-        );
-      `;
-
-      this.db.run(query, (err) => {
-        if (err) {
-          console.error('❌ Error al inicializar el esquema de la base de datos:', err.message);
-          reject(err);
+      this.db.run('PRAGMA journal_mode = WAL;', (pragmaErr) => {
+        if (pragmaErr) {
+          console.warn('⚠️ No se pudo activar modo WAL:', pragmaErr.message);
         } else {
-          console.log('✅ Esquema de base de datos verificado e inicializado correctamente.');
-          resolve();
+          console.log('⚡ Base de datos SQLite en modo WAL (Write-Ahead Logging).');
         }
+
+        const query = `
+          CREATE TABLE IF NOT EXISTS incidencias (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            titulo TEXT NOT NULL,
+            categoria TEXT NOT NULL CHECK(categoria IN ('Bache', 'Luminaria', 'Semáforo', 'Basura/Aseo')),
+            descripcion TEXT NOT NULL,
+            latitud REAL NOT NULL,
+            longitud REAL NOT NULL,
+            estado TEXT NOT NULL DEFAULT 'Ingresado' CHECK(estado IN ('Ingresado', 'Asignado', 'En Reparación', 'Resuelto')),
+            prioridad TEXT NOT NULL DEFAULT 'Media' CHECK(prioridad IN ('Baja', 'Media', 'Alta', 'Crítica')),
+            foto_url TEXT,
+            creado_en DATETIME DEFAULT CURRENT_TIMESTAMP
+          );
+        `;
+
+        this.db.run(query, (err) => {
+          if (err) {
+            console.error('❌ Error al inicializar el esquema de la base de datos:', err.message);
+            reject(err);
+          } else {
+            console.log('✅ Esquema de base de datos verificado e inicializado correctamente.');
+            resolve();
+          }
+        });
       });
     });
   }

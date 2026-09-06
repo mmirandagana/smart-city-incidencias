@@ -7,6 +7,9 @@ dist/
 # Base de datos SQLite local
 database.sqlite
 database.sqlite-journal
+database.sqlite-wal
+database.sqlite-shm
+*.sqlite*
 
 # Variables de entorno
 .env

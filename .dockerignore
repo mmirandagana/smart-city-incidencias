@@ -4,6 +4,6 @@ dist
 tests
 android
 ios
-*.sqlite
+*.sqlite*
 .env
 npm-debug.log
