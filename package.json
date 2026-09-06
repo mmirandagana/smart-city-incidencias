@@ -10,7 +10,13 @@
     "seed": "tsx src/config/seed.ts",
     "test": "node tests/verify-crud.js",
     "test:mobile": "node tests/verify-mobile.js",
-    "test:all": "node tests/verify-crud.js && node tests/verify-mobile.js"
+    "test:deploy": "node tests/verify-deployment.js",
+    "test:all": "node tests/verify-crud.js && node tests/verify-mobile.js && node tests/verify-deployment.js",
+    "cap:sync": "npx cap sync",
+    "cap:add:android": "npx cap add android",
+    "cap:add:ios": "npx cap add ios",
+    "cap:copy": "npx cap copy",
+    "build:mobile": "npm run build && npx cap copy"
   },
   "keywords": [
     "smart-city",
@@ -23,12 +29,16 @@
   "author": "Smart City Engineering Team",
   "license": "ISC",
   "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/ios": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
+    "@capacitor/cli": "^6.0.0",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/node": "^20.12.7",

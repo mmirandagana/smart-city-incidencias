@@ -1,0 +1,9 @@
+node_modules
+dist
+.git
+tests
+android
+ios
+*.sqlite
+.env
+npm-debug.log

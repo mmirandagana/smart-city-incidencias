@@ -1,5 +1,6 @@
 import sqlite3 from 'sqlite3';
 import path from 'path';
+import fs from 'fs';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -14,6 +15,14 @@ export class Database {
 
   private constructor() {
     const dbPath = process.env.DB_PATH || path.join(__dirname, '../../database.sqlite');
+    const dbDir = path.dirname(dbPath);
+    if (!fs.existsSync(dbDir)) {
+      try {
+        fs.mkdirSync(dbDir, { recursive: true });
+      } catch (dirErr: any) {
+        console.error(`⚠️ No se pudo crear directorio para SQLite (${dbDir}):`, dirErr.message);
+      }
+    }
     const sqlite = sqlite3.verbose();
     
     this.db = new sqlite.Database(dbPath, (err) => {
